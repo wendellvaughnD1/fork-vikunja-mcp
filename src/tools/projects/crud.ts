@@ -3,6 +3,8 @@
  * Handles basic Create, Read, Update, Delete operations for projects
  */
 
+import { assertDeleteEnabled } from '../../utils/safety';
+import { autoShareIfConfigured } from './user-sharing';
 import type { Project, ProjectListParams } from 'node-vikunja';
 import { MCPError, ErrorCode, type CreateProjectRequest, type UpdateProjectRequest } from '../../types';
 import { getClientFromContext } from '../../client';
@@ -299,9 +301,14 @@ export async function createProject(
 
     const createdProject = await client.projects.createProject(projectData as Project);
 
+    const shareStatus =
+      typeof createdProject.id === 'number'
+        ? await autoShareIfConfigured(createdProject.id)
+        : undefined;
+
     const result = createProjectResponse(
       'create_project',
-      `Project "${createdProject.title}" created successfully`,
+      `Project "${createdProject.title}" created successfully${shareStatus ? `. ${shareStatus}` : ''}`,
       { project: createdProject },
       {},
       verbosity,
@@ -472,6 +479,7 @@ export async function deleteProject(
 
   try {
     validateId(id, 'project id');
+    assertDeleteEnabled('project');
 
     const client = await getClientFromContext();
 

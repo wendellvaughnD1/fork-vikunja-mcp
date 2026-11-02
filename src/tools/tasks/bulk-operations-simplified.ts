@@ -3,6 +3,7 @@
  * Consolidates BulkOperationProcessor, BulkOperationErrorHandler, BulkOperationValidator, and BatchProcessorFactory
  */
 
+import { assertDeleteEnabled } from '../../utils/safety';
 import { MCPError, ErrorCode, createStandardResponse, getClientFromContext, logger, isAuthenticationError, RETRY_CONFIG, transformApiError, handleFetchError } from '../../index';
 import type { Assignee } from '../../types';
 import { withRetry } from '../../utils/retry';
@@ -152,6 +153,7 @@ export async function bulkUpdateTasks(args: BulkUpdateArgs): Promise<{ content: 
 
 export async function bulkDeleteTasks(args: BulkDeleteArgs): Promise<{ content: Array<{ type: 'text'; text: string }> }> {
   try {
+    assertDeleteEnabled('task');
     validateBulkDelete(args);
     // Validation ensures taskIds exists
     const taskIds = args.taskIds ?? [];

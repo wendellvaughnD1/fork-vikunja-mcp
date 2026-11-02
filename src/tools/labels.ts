@@ -11,6 +11,7 @@ import { MCPError, ErrorCode, createStandardResponse } from '../types';
 import { validateAndConvertId } from '../utils/validation';
 import { wrapToolError } from '../utils/error-handler';
 import { getClientFromContext } from '../client';
+import { assertDeleteEnabled } from '../utils/safety';
 import type { Label } from 'node-vikunja';
 import type { TypedVikunjaClient } from '../types/node-vikunja-extended';
 import { formatAorpAsMarkdown } from '../utils/response-factory';
@@ -179,6 +180,7 @@ export function registerLabelsTool(server: McpServer, authManager: AuthManager, 
               throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Label ID is required');
             }
             validateAndConvertId(args.id, 'id');
+            assertDeleteEnabled('label');
 
             const result = await client.labels.deleteLabel(args.id);
 

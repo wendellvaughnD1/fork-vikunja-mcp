@@ -2,6 +2,7 @@
  * Main orchestration for bulk operations
  */
 
+import { assertDeleteEnabled } from '../../../utils/safety';
 import { MCPError, ErrorCode, createStandardResponse, getClientFromContext, logger, isAuthenticationError, RETRY_CONFIG, transformApiError, handleFetchError } from '../../../index';
 import { withRetry } from '../../../utils/retry';
 import type { BatchResult } from '../../../utils/performance/batch-processor';
@@ -228,6 +229,7 @@ export const BulkOperationProcessor = {
    */
   async bulkDeleteTasks(args: BulkDeleteArgs): Promise<{ content: Array<{ type: 'text'; text: string }> }> {
     try {
+      assertDeleteEnabled('task');
       BulkOperationValidator.validateBulkDelete(args);
 
       const taskIds = args.taskIds; // Validated by BulkOperationValidator.validateBulkUpdate

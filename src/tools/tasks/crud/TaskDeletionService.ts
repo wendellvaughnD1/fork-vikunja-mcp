@@ -7,6 +7,7 @@ import { MCPError, ErrorCode } from '../../../types';
 import { getClientFromContext } from '../../../client';
 import type { Task, VikunjaClient } from 'node-vikunja';
 import { validateId } from '../validation';
+import { assertDeleteEnabled } from '../../../utils/safety';
 import { transformApiError, handleFetchError, handleStatusCodeError } from '../../../utils/error-handler';
 import { createTaskResponse } from './TaskResponseFormatter';
 import { formatAorpAsMarkdown } from '../../../utils/response-factory';
@@ -25,6 +26,7 @@ export async function deleteTask(args: DeleteTaskArgs): Promise<{ content: Array
       throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Task id is required for delete operation');
     }
     validateId(args.id, 'id');
+    assertDeleteEnabled('task');
 
     const client = await getClientFromContext();
 

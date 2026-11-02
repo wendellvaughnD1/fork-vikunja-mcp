@@ -10,7 +10,7 @@
  * - response-formatter.ts: Response creation and formatting
  * - crud.ts: Basic CRUD operations (list, get, create, update, delete, archive)
  * - hierarchy.ts: Complex tree operations (children, tree, breadcrumb, move)
- * - sharing.ts: Link sharing operations
+ * - user-sharing.ts: Sharing projects with users (link shares removed)
  * - index.ts: Main orchestration and tool registration
  */
 
@@ -29,11 +29,8 @@ export {
   getProjectTree,
   getProjectBreadcrumb,
   moveProject,
-  createProjectShare,
-  listProjectShares,
-  getProjectShare,
-  deleteProjectShare,
-  authProjectShare,
+  shareProjectWithUser,
+  listProjectUsers,
   type ListProjectsArgs,
   type GetProjectArgs,
   type CreateProjectArgs,
@@ -43,12 +40,7 @@ export {
   type GetChildrenArgs,
   type GetTreeArgs,
   type GetBreadcrumbArgs,
-  type MoveProjectArgs,
-  type CreateShareArgs,
-  type ListSharesArgs,
-  type GetShareArgs,
-  type DeleteShareArgs,
-  type AuthShareArgs
+  type MoveProjectArgs
 } from './projects/index';
 
 // Re-export validation utilities for external use

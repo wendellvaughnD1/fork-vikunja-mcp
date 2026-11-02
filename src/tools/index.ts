@@ -2,6 +2,9 @@
  * Tool Registration
  * Registers all Vikunja tools with the MCP server using conditional registration
  *
+ * Removed in this fork (attack surface reduction): teams, templates, webhooks,
+ * project link shares.
+ *
  * Registration Strategy:
  * - Core tools (auth, tasks): Always registered
  * - Client-dependent tools: Only registered when clientFactory is available
@@ -26,11 +29,8 @@ import { registerTaskLabelsTool } from './task-labels';
 import { registerTaskRelationsTool } from './task-relations';
 import { registerProjectsTool } from './projects/index';
 import { registerLabelsTool } from './labels';
-import { registerTeamsTool } from './teams';
 import { registerUsersTool } from './users';
 import { registerFiltersTool } from './filters';
-import { registerTemplatesTool } from './templates';
-import { registerWebhooksTool } from './webhooks';
 import { registerBatchImportTool } from './batch-import';
 import { registerExportTool } from './export';
 
@@ -47,11 +47,8 @@ export {
   registerTaskRelationsTool,
   registerProjectsTool,
   registerLabelsTool,
-  registerTeamsTool,
   registerUsersTool,
   registerFiltersTool,
-  registerTemplatesTool,
-  registerWebhooksTool,
   registerBatchImportTool,
   registerExportTool,
 };
@@ -81,16 +78,9 @@ export function registerTools(
   if (clientFactory) {
     registerProjectsTool(server, authManager, clientFactory);
     registerLabelsTool(server, authManager, clientFactory);
-    registerTeamsTool(server, authManager, clientFactory);
 
     // Register filters tool (needs auth manager for session-scoped storage)
     registerFiltersTool(server, authManager, clientFactory);
-
-    // Register templates tool
-    registerTemplatesTool(server, authManager, clientFactory);
-
-    // Register webhooks tool
-    registerWebhooksTool(server, authManager, clientFactory);
 
     // Register batch import tool
     registerBatchImportTool(server, authManager, clientFactory);

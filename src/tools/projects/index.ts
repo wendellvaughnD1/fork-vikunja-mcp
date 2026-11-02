@@ -40,18 +40,18 @@ import {
   type MoveProjectArgs
 } from './hierarchy';
 
-import {
-  createProjectShare,
-  listProjectShares,
-  getProjectShare,
-  deleteProjectShare,
-  authProjectShare,
-  type CreateShareArgs,
-  type ListSharesArgs,
-  type GetShareArgs,
-  type DeleteShareArgs,
-  type AuthShareArgs
-} from './sharing';
+import { shareProjectWithUser, listProjectUsers, parseShareRight } from './user-sharing';
+
+function textResponse(message: string, data: unknown): McpResponse {
+  return {
+    content: [
+      {
+        type: 'text' as const,
+        text: `${message}\n\n\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\``,
+      },
+    ],
+  };
+}
 
 /**
  * Legacy single-tool interface for backward compatibility
@@ -64,11 +64,11 @@ export function registerProjectsTool(
 ): void {
   server.tool(
     'vikunja_projects',
-    'Manage projects with full CRUD operations, hierarchy management, and sharing capabilities',
+    'Manage projects: CRUD, archive, hierarchy (children/tree/breadcrumb/move) and sharing with users (share-with-user, list-users)',
     {
       subcommand: z.enum(['list', 'get', 'create', 'update', 'delete', 'archive', 'unarchive',
         'get-children', 'get-tree', 'get-breadcrumb', 'move',
-        'create-share', 'list-shares', 'get-share', 'delete-share', 'auth-share'
+        'share-with-user', 'list-users'
       ]),
       // CRUD arguments
       id: z.number().positive().optional(),
@@ -83,14 +83,9 @@ export function registerProjectsTool(
       // Hierarchy arguments
       maxDepth: z.number().min(1).max(20).optional(),
       includeArchived: z.boolean().optional(),
-      // Sharing arguments
-      projectId: z.number().positive().optional(),
-      shareId: z.string().optional(),
-      shareHash: z.string().optional(),
+      // User sharing arguments (share-with-user / list-users use `id` as project ID)
+      username: z.string().optional(),
       right: z.enum(['read', 'write', 'admin']).optional(),
-      name: z.string().optional(),
-      password: z.string().optional(),
-      shares: z.number().min(1).optional(),
       // Session ID for AORP response tracking
       sessionId: z.string().optional(),
     },
@@ -173,50 +168,30 @@ export function registerProjectsTool(
             validateId(args.id, 'id');
             return await moveProject(args as MoveProjectArgs, context);
 
-          // Sharing operations
-          case 'create-share':
-            if (!args.projectId) {
-              throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
+          // User sharing operations
+          case 'share-with-user': {
+            if (!args.id) {
+              throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Project ID (id) is required');
             }
-            if (!args.right) {
-              throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Share right is required');
+            if (!args.username) {
+              throw new MCPError(ErrorCode.VALIDATION_ERROR, 'username is required');
             }
-            return await createProjectShare(args as CreateShareArgs);
+            validateId(args.id, 'id');
+            const right = parseShareRight(args.right, 'write');
+            const shared = await shareProjectWithUser(args.id, args.username, right);
+            return textResponse(
+              `Project ${args.id} shared with "${args.username}" (${args.right ?? 'write'})`,
+              shared,
+            );
+          }
 
-          case 'list-shares':
-            if (!args.projectId) {
-              throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
+          case 'list-users': {
+            if (!args.id) {
+              throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Project ID (id) is required');
             }
-            return await listProjectShares(args as ListSharesArgs);
-
-          case 'get-share':
-            if (args.shareId === undefined || args.shareId === null) {
-              throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Share ID is required');
-            }
-            if (args.shareId.trim() === '') {
-              throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Share ID must be a non-empty string');
-            }
-            return await getProjectShare(args as GetShareArgs);
-
-          case 'delete-share':
-            if (args.shareId === undefined || args.shareId === null) {
-              throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Share ID is required');
-            }
-            if (args.shareId.trim() === '') {
-              throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Share ID must be a non-empty string');
-            }
-            return await deleteProjectShare(args as DeleteShareArgs);
-
-          case 'auth-share': {
-            if (!args.shareHash) {
-              throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Share hash is required');
-            }
-            const authShareArgs: AuthShareArgs = {
-              shareHash: args.shareHash
-            };
-            if (args.projectId !== undefined) authShareArgs.projectId = args.projectId;
-            if (args.password !== undefined) authShareArgs.password = args.password;
-            return await authProjectShare(authShareArgs);
+            validateId(args.id, 'id');
+            const users = await listProjectUsers(args.id);
+            return textResponse(`Users with access to project ${args.id}`, users);
           }
 
           default:
@@ -366,80 +341,6 @@ export function registerProjectTools(
       }
     }
   );
-
-  // Link Sharing Operations
-  server.tool(
-    'vikunja_projects_sharing',
-    'Project sharing operations (create_share, list_shares, get_share, delete_share, auth_share)',
-    {
-      subcommand: z.enum(['create_share', 'list_shares', 'get_share', 'delete_share', 'auth_share']),
-      projectId: z.number().optional(),
-      shareId: z.string().optional(),
-      shareHash: z.string().optional(),
-      right: z.enum(['read', 'write', 'admin']).optional(),
-      name: z.string().optional(),
-      password: z.string().optional(),
-      shares: z.number().min(1).optional(),
-      page: z.number().min(1).optional(),
-      perPage: z.number().min(1).max(100).optional(),
-      verbosity: z.enum(['minimal', 'standard', 'detailed']).optional(),
-      useOptimizedFormat: z.boolean().optional(),
-      useAorp: z.boolean().optional(),
-    },
-    async (args, _context) => {
-      try {
-        const result = await (async (): Promise<McpResponse> => {
-          switch (args.subcommand) {
-            case 'create_share':
-              if (!args.projectId) {
-                throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Project ID is required for create_share operation');
-              }
-              if (!args.right) {
-                throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Share right is required for create_share operation');
-              }
-              return await createProjectShare(args as CreateShareArgs);
-
-            case 'list_shares':
-              if (!args.projectId) {
-                throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Project ID is required for list_shares operation');
-              }
-              return await listProjectShares(args as ListSharesArgs);
-
-            case 'get_share':
-              if (!args.shareId) {
-                throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Share ID is required for get_share operation');
-              }
-              return await getProjectShare(args as GetShareArgs);
-
-            case 'delete_share':
-              if (!args.shareId) {
-                throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Share ID is required for delete_share operation');
-              }
-              return await deleteProjectShare(args as DeleteShareArgs);
-
-            case 'auth_share': {
-              if (!args.shareHash) {
-                throw new MCPError(ErrorCode.VALIDATION_ERROR, 'Share hash is required for auth_share operation');
-              }
-              const authShareArgs: AuthShareArgs = {
-                shareHash: args.shareHash
-              };
-              if (args.projectId !== undefined) authShareArgs.projectId = args.projectId;
-              if (args.password !== undefined) authShareArgs.password = args.password;
-              return await authProjectShare(authShareArgs);
-            }
-
-            default:
-              throw new MCPError(ErrorCode.VALIDATION_ERROR, `Unknown sharing subcommand: ${String(args.subcommand)}`);
-          }
-        })();
-
-        return result;
-      } catch (error) {
-        throw wrapToolError(error, 'vikunja_projects_sharing', args.subcommand, args.projectId || args.shareId);
-      }
-    }
-  );
 }
 
 // Export all types for external use
@@ -453,12 +354,7 @@ export type {
   GetChildrenArgs,
   GetTreeArgs,
   GetBreadcrumbArgs,
-  MoveProjectArgs,
-  CreateShareArgs,
-  ListSharesArgs,
-  GetShareArgs,
-  DeleteShareArgs,
-  AuthShareArgs
+  MoveProjectArgs
 };
 
 // Export all functions for direct use if needed
@@ -478,10 +374,7 @@ export {
   getProjectBreadcrumb,
   moveProject,
 
-  // Sharing
-  createProjectShare,
-  listProjectShares,
-  getProjectShare,
-  deleteProjectShare,
-  authProjectShare
+  // User sharing
+  shareProjectWithUser,
+  listProjectUsers
 };

@@ -23,24 +23,12 @@ jest.mock('../../src/tools/labels', () => ({
   registerLabelsTool: jest.fn(),
 }));
 
-jest.mock('../../src/tools/teams', () => ({
-  registerTeamsTool: jest.fn(),
-}));
-
 jest.mock('../../src/tools/users', () => ({
   registerUsersTool: jest.fn(),
 }));
 
 jest.mock('../../src/tools/filters', () => ({
   registerFiltersTool: jest.fn(),
-}));
-
-jest.mock('../../src/tools/templates', () => ({
-  registerTemplatesTool: jest.fn(),
-}));
-
-jest.mock('../../src/tools/webhooks', () => ({
-  registerWebhooksTool: jest.fn(),
 }));
 
 jest.mock('../../src/tools/batch-import', () => ({
@@ -56,11 +44,8 @@ import { registerAuthTool } from '../../src/tools/auth';
 import { registerTasksTool } from '../../src/tools/tasks';
 import { registerProjectsTool } from '../../src/tools/projects/index';
 import { registerLabelsTool } from '../../src/tools/labels';
-import { registerTeamsTool } from '../../src/tools/teams';
 import { registerUsersTool } from '../../src/tools/users';
 import { registerFiltersTool } from '../../src/tools/filters';
-import { registerTemplatesTool } from '../../src/tools/templates';
-import { registerWebhooksTool } from '../../src/tools/webhooks';
 import { registerBatchImportTool } from '../../src/tools/batch-import';
 import { registerExportTool } from '../../src/tools/export';
 
@@ -102,10 +87,7 @@ describe('Tool Registration', () => {
       // These should NOT be called without clientFactory
       expect(registerProjectsTool).not.toHaveBeenCalled();
       expect(registerLabelsTool).not.toHaveBeenCalled();
-      expect(registerTeamsTool).not.toHaveBeenCalled();
       expect(registerFiltersTool).not.toHaveBeenCalled();
-      expect(registerTemplatesTool).not.toHaveBeenCalled();
-      expect(registerWebhooksTool).not.toHaveBeenCalled();
       expect(registerBatchImportTool).not.toHaveBeenCalled();
       expect(registerUsersTool).not.toHaveBeenCalled();
       expect(registerExportTool).not.toHaveBeenCalled();
@@ -133,17 +115,11 @@ describe('Tool Registration', () => {
       expect(registerLabelsTool).toHaveBeenCalledTimes(1);
       expect(registerLabelsTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
 
-      expect(registerTeamsTool).toHaveBeenCalledTimes(1);
-      expect(registerTeamsTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
 
       expect(registerFiltersTool).toHaveBeenCalledTimes(1);
       expect(registerFiltersTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
 
-      expect(registerTemplatesTool).toHaveBeenCalledTimes(1);
-      expect(registerTemplatesTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
 
-      expect(registerWebhooksTool).toHaveBeenCalledTimes(1);
-      expect(registerWebhooksTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
 
       expect(registerBatchImportTool).toHaveBeenCalledTimes(1);
       expect(registerBatchImportTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
@@ -175,17 +151,11 @@ describe('Tool Registration', () => {
       expect(registerLabelsTool).toHaveBeenCalledTimes(1);
       expect(registerLabelsTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
 
-      expect(registerTeamsTool).toHaveBeenCalledTimes(1);
-      expect(registerTeamsTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
 
       expect(registerFiltersTool).toHaveBeenCalledTimes(1);
       expect(registerFiltersTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
 
-      expect(registerTemplatesTool).toHaveBeenCalledTimes(1);
-      expect(registerTemplatesTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
 
-      expect(registerWebhooksTool).toHaveBeenCalledTimes(1);
-      expect(registerWebhooksTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
 
       expect(registerBatchImportTool).toHaveBeenCalledTimes(1);
       expect(registerBatchImportTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
@@ -218,17 +188,11 @@ describe('Tool Registration', () => {
       expect(registerLabelsTool).toHaveBeenCalledTimes(1);
       expect(registerLabelsTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
 
-      expect(registerTeamsTool).toHaveBeenCalledTimes(1);
-      expect(registerTeamsTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
 
       expect(registerFiltersTool).toHaveBeenCalledTimes(1);
       expect(registerFiltersTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
 
-      expect(registerTemplatesTool).toHaveBeenCalledTimes(1);
-      expect(registerTemplatesTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
 
-      expect(registerWebhooksTool).toHaveBeenCalledTimes(1);
-      expect(registerWebhooksTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
 
       expect(registerBatchImportTool).toHaveBeenCalledTimes(1);
       expect(registerBatchImportTool).toHaveBeenCalledWith(mockServer, mockAuthManager, mockClientFactory);
@@ -253,10 +217,7 @@ describe('Tool Registration', () => {
         (registerTasksTool as jest.Mock).mock.invocationCallOrder[0],
         (registerProjectsTool as jest.Mock).mock.invocationCallOrder[0],
         (registerLabelsTool as jest.Mock).mock.invocationCallOrder[0],
-        (registerTeamsTool as jest.Mock).mock.invocationCallOrder[0],
         (registerFiltersTool as jest.Mock).mock.invocationCallOrder[0],
-        (registerTemplatesTool as jest.Mock).mock.invocationCallOrder[0],
-        (registerWebhooksTool as jest.Mock).mock.invocationCallOrder[0],
         (registerBatchImportTool as jest.Mock).mock.invocationCallOrder[0],
         (registerUsersTool as jest.Mock).mock.invocationCallOrder[0],
         (registerExportTool as jest.Mock).mock.invocationCallOrder[0],

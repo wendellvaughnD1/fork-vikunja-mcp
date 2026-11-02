@@ -1,5 +1,26 @@
 # Vikunja MCP Server
 
+> **Hardened fork** of [democratize-technology/vikunja-mcp](https://github.com/democratize-technology/vikunja-mcp).
+>
+> Changes in this fork:
+> - **Safety controls**: task / project / label / saved-filter deletes are disabled by default.
+>   Enable with `VIKUNJA_ENABLE_{TASK|PROJECT|LABEL|FILTER}_DELETE=true`.
+> - **Real saved filters**: `vikunja_filters` now manages Vikunja saved filters through the API
+>   (`/filters`) instead of an in-memory store. A saved filter with id `N` appears in Vikunja as project `-(N+1)`.
+> - **Project ↔ user sharing**: `vikunja_projects` subcommands `share-with-user` and `list-users`.
+>   With `VIKUNJA_AUTO_SHARE_USERNAME` set, every project created by the server is shared automatically.
+> - **Reduced attack surface**: removed `teams`, `templates`, `webhooks` tools and project link (public) shares.
+> - Removed unused native dependency `better-sqlite3` (and `jsonata`), plus generated report/scratch files.
+>
+> Recommended env for a Vikunja bot user (`bot-…`) token:
+> ```
+> VIKUNJA_URL=https://vikunja.lan/api/v1
+> VIKUNJA_API_TOKEN=tk_...
+> VIKUNJA_ENABLE_LABEL_DELETE=true
+> VIKUNJA_ENABLE_FILTER_DELETE=true
+> VIKUNJA_AUTO_SHARE_USERNAME=<your-username>
+> ```
+
 A Model Context Protocol (MCP) server that enables AI assistants to interact with Vikunja task management instances.
 
 ## Features
@@ -9,9 +30,7 @@ A Model Context Protocol (MCP) server that enables AI assistants to interact wit
 - **Full task management** operations implemented
 - **Complete project management** with CRUD operations
 - **Label management** for organizing tasks
-- **Team operations** for collaboration (get/update/members limited by API)
 - **User management** with settings and search
-- **Webhook management** for project automation
 - **Batch import** tasks from CSV or JSON files
 - **Input validation** for dates, IDs, and hex colors
 - **Efficient diff-based updates** for assignees
